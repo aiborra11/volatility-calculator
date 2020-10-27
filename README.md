@@ -9,7 +9,7 @@ We can use it to expect specific fluctuations in the returns of the underlying a
 
 The way I calculate it is throughout logarithmic percentage change of the currency spot price at every minute during X periods of time. 
 
-![volatility_formula](https://github.com/aiborra11/volatility-calculator/output/images/volatility_formula.png)
+![volatility_formula](https://github.com/aiborra11/volatility-calculator/blob/main/output/images/volatility_formula.png)
 
 It makes a lot of sense to me using the natural logarithm to decrease the growth as time goes by. Volatility can't (or shouldn't) grow at a high rate during long periods of time.
 
@@ -28,7 +28,7 @@ Finally, you will be able to analyse the volatility and use it for SL/TP calcula
 
 Here is a sample of the volatility XBT experienced the previous month at the moment of publishing this repo (27/10/2020):
 
-![volatility_index](https://github.com/aiborra11/volatility-calculator/output/images/volatility_index.png)
+![volatility_index](https://github.com/aiborra11/volatility-calculator/blob/main/output/images/volatility_index.png)
 
 In this case I calculated the Historic Volatility using a daily basis, but feel free to modify the window param to calculate 
 at a weekly, Daily, Monthly, etc., level. 
@@ -45,7 +45,7 @@ I considered interesting to develop a better analysis_
 
 https://github.com/aiborra11/crypto-scraper
 
-Soon, I will include the volatility calculator into the crypto-scraper.
+Soon, I will include the volatility-calculator into the crypto-scraper.
 
 
 
