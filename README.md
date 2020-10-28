@@ -26,7 +26,8 @@ either you are already up to date.
 
 Finally, you will be able to analyse the volatility and use it for SL/TP calculations, backtest and realise if you are cutting wins/loses, etc.
 
-Here is a sample of the volatility XBT experienced the previous month at the moment of publishing this repo (27/10/2020):
+Here is a sample of the volatility XBT experienced the previous month at the moment of publishing this repo (27/10/2020)
+but feel free to pass any other asset to obtain its volatility:
 
 ![volatility_index](https://github.com/aiborra11/volatility-calculator/blob/main/output/images/volatility_index.png)
 
