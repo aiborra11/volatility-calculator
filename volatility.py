@@ -105,7 +105,7 @@ def get_volatility(data, frequency, window=1440):
                 df = pd.DataFrame(data['Timestamp'][(index - window):])
 
                 # Executing volatility function
-                vol = (data['Close'][(index - window):]).rolling(window, min_periods=window).apply(volatility)
+                vol = (data['Close'][(index - window):]).rolling(window, min_periods=int(0.9*window)).apply(volatility)
                 df = pd.concat([df.reset_index(drop=True), vol.reset_index(drop=True)], axis=1) \
                                                                                 .rename(columns={'Close': 'Volatility'})
 
@@ -132,7 +132,7 @@ def get_volatility(data, frequency, window=1440):
             print('Calculating volatility from scratch!')
 
             #Executing volatility function
-            data['Volatility'] = data['Close'].rolling(window, min_periods=window).apply(volatility)
+            data['Volatility'] = data['Close'].rolling(window, min_periods=int(0.9*window)).apply(volatility)
 
             #Indexing Timestamp to receive data at a desired timeframe
             data = time_indexer(data)
