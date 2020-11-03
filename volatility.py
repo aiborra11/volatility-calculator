@@ -57,7 +57,7 @@ def time_indexer(df):
     return df.set_index('Timestamp')
 
 
-def get_volatility(data, frequency, window=1440):
+def get_volatility(df, data, frequency, window=1440):
     """
     To avoid recalculating the volatility fot the whole dataframe, we detect the last calculated index position and
     apply the volatility function for this missing period. In case any is detected we will calculate the volatility for
@@ -66,7 +66,8 @@ def get_volatility(data, frequency, window=1440):
 
     Arguments:
     ----------
-        df {[DataFrame]} -- dataframe containing the historic 1min closing price.
+        df {[DataFrame]} -- dataframe in the timeframe you are using
+        data {[DataFrame]} -- dataframe containing the historic 1min closing price.
         frequency {[str]} -- Timeframe we'd like to receive the data
         window {[int]} -- Over which period do we want to calculate the volatility
                         a) Daiy = 1440 (minutes in a day)
@@ -88,6 +89,7 @@ def get_volatility(data, frequency, window=1440):
     if valid_files:
         print('Perfect! You have a file containing 1min closing price data.')
         print('Now, checking if the file has previous volatility...')
+        data = pd.read_csv("./data.nosync/raw_data/1min_general.csv")
 
         existing_volatility = [x for x in data.columns if x == 'Volatility']
 
@@ -119,13 +121,17 @@ def get_volatility(data, frequency, window=1440):
                 data_vol.to_csv(f'./output/1min_general.csv')
 
                 print('Check your output folder!')
-                return data_vol, data_vol['Volatility'].groupby(pd.Grouper(freq=frequency)).mean()
+
+                return data_vol, pd.concat([df.reset_index(drop=True),
+                                            data_vol['Volatility'].groupby(pd.Grouper(freq=frequency)).mean()\
+                                                                                    .reset_index(drop=True)], axis=1)
 
             except:
                 print('Seems you are up to date! We cannot find a valid missing value for volatility.')
                 data = time_indexer(data)
-                return data, data['Volatility'].groupby(pd.Grouper(freq=frequency)).mean()
-
+                return data, pd.concat([df.reset_index(drop=True),
+                                            data['Volatility'].groupby(pd.Grouper(freq=frequency)).mean()\
+                                                                                    .reset_index(drop=True)], axis=1)
 
         # Calculate volatility from scratch
         else:
@@ -139,7 +145,9 @@ def get_volatility(data, frequency, window=1440):
 
             data.to_csv(f'./output/1min_general.csv')
 
-            return data['Volatility'].groupby(pd.Grouper(freq=frequency)).mean()
+            return data, pd.concat([df.reset_index(drop=True),
+                                            data['Volatility'].groupby(pd.Grouper(freq=frequency)).mean()\
+                                                                                    .reset_index(drop=True)], axis=1)
 
     else:
         print('You need to input 1 minute closing price data to run this algorithm')
