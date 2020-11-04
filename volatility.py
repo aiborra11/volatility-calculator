@@ -7,24 +7,21 @@ from datetime import datetime
 
 
 
+
 def volatility(df):
     """
     Daily Historical Volatility Index calculated using the logarithmic percentage change taken from spot price
     of the currency at every minute and converting it to the desired interval (modify the window param in case you
     want to use a different interval.).
-
         window:
             a) Daiy = 1440 (minutes in a day)
             b) Weekly = 10080 (minutes in a week)
             ...
-
         Formula:
             Stdev(Ln(P1/P0), Ln(P2/P1), ..., Ln(P1440/P1439)) * Sqrt(1440)
-
     Arguments:
     ----------
         df {[DataFrame]} -- dataframe containing the historic 1min closing price.
-
     Returns:
     --------
         {[float]}
@@ -35,8 +32,9 @@ def volatility(df):
 
     prices = pd.DataFrame(df).rename(columns={0: 'Close'})
     prices['Close'] = prices['Close'].ffill()
-    prices['LagClose'] = prices['Close'].shift(1)
-    volatility = ((math.log(prices['LagClose'] / prices['Close'])).std() * np.sqrt(window))
+    prices['LagClose'] = prices['Close'].shift(1).bfill()
+    prices = prices[1:]
+    volatility = ((np.log(prices['LagClose'] / prices['Close'])).std() * np.sqrt(window))
     return volatility
 
 
@@ -57,17 +55,15 @@ def time_indexer(df):
     return df.set_index('Timestamp')
 
 
-def get_volatility(df, data, frequency, window=1440):
+
+def get_volatility(frequency, window=1441):
     """
     To avoid recalculating the volatility fot the whole dataframe, we detect the last calculated index position and
     apply the volatility function for this missing period. In case any is detected we will calculate the volatility for
     the whole dataframe.
-
-
     Arguments:
     ----------
-        df {[DataFrame]} -- dataframe in the timeframe you are using
-        data {[DataFrame]} -- dataframe containing the historic 1min closing price.
+        df {[DataFrame]} -- dataframe containing the historic 1min closing price.
         frequency {[str]} -- Timeframe we'd like to receive the data
         window {[int]} -- Over which period do we want to calculate the volatility
                         a) Daiy = 1440 (minutes in a day)
@@ -78,13 +74,12 @@ def get_volatility(df, data, frequency, window=1440):
         {[DataFrame]}[0]
             Dataframe containing all the data + the volatility at 1 min intervals.
             csv file containing all the data + the volatility at 1 min intervals.
-
         {[DataFrame]}[1]
             Dataframe containing the volatility grouped at a desired interval
     """
 
     # Checking if you have the required file (1min closing price data) to execute this script.
-    valid_files = [file for file in os.listdir("./data.nosync") if file.endswith(".csv")
+    valid_files = [file for file in os.listdir("./data.nosync/raw_data") if file.endswith(".csv")
                                                                         and file.split('_')[0] == '1min']
     if valid_files:
         print('Perfect! You have a file containing 1min closing price data.')
@@ -107,7 +102,7 @@ def get_volatility(df, data, frequency, window=1440):
                 df = pd.DataFrame(data['Timestamp'][(index - window):])
 
                 # Executing volatility function
-                vol = (data['Close'][(index - window):]).rolling(window, min_periods=int(0.9*window)).apply(volatility)
+                vol = (data['Close'][(index - window):]).rolling(window, min_periods=window).apply(volatility)
                 df = pd.concat([df.reset_index(drop=True), vol.reset_index(drop=True)], axis=1) \
                                                                                 .rename(columns={'Close': 'Volatility'})
 
@@ -118,36 +113,33 @@ def get_volatility(df, data, frequency, window=1440):
                 # Indexing Timestamp to use the grouper function and obtain data at a desired timeframe
                 data_vol = time_indexer(data_vol)
 
-                data_vol.to_csv(f'./output/1min_general.csv')
+                data_vol.to_csv(f'./data.nosync/raw_data/1min_general.csv')
 
                 print('Check your output folder!')
 
-                return data_vol, pd.concat([df.reset_index(drop=True),
-                                            data_vol['Volatility'].groupby(pd.Grouper(freq=frequency)).mean()\
-                                                                                    .reset_index(drop=True)], axis=1)
+                return data_vol, data_vol['Volatility'].groupby(pd.Grouper(freq=frequency)).mean()
+
 
             except:
                 print('Seems you are up to date! We cannot find a valid missing value for volatility.')
                 data = time_indexer(data)
-                return data, pd.concat([df.reset_index(drop=True),
-                                            data['Volatility'].groupby(pd.Grouper(freq=frequency)).mean()\
-                                                                                    .reset_index(drop=True)], axis=1)
+
+                return data, data['Volatility'].groupby(pd.Grouper(freq=frequency)).mean()
+
 
         # Calculate volatility from scratch
         else:
             print('Calculating volatility from scratch!')
 
             #Executing volatility function
-            data['Volatility'] = data['Close'].rolling(window, min_periods=int(0.9*window)).apply(volatility)
+            data['Volatility'] = data['Close'].rolling(window, min_periods=window).apply(volatility)
 
             #Indexing Timestamp to receive data at a desired timeframe
             data = time_indexer(data)
 
-            data.to_csv(f'./output/1min_general.csv')
+            data.to_csv(f'./data.nosync/raw_data/1min_general.csv')
 
-            return data, pd.concat([df.reset_index(drop=True),
-                                            data['Volatility'].groupby(pd.Grouper(freq=frequency)).mean()\
-                                                                                    .reset_index(drop=True)], axis=1)
+            return data, data['Volatility'].groupby(pd.Grouper(freq=frequency)).mean()
 
     else:
         print('You need to input 1 minute closing price data to run this algorithm')
